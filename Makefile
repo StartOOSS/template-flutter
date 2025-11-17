@@ -1,7 +1,7 @@
 .PHONY: format analyze test security e2e secrets check
 
 format:
-	flutter format lib test
+flutter format lib test integration_test
 
 analyze:
 	flutter analyze

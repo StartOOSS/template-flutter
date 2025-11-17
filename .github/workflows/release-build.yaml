@@ -1,0 +1,37 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Format check
+        run: flutter format --set-exit-if-changed lib test integration_test
+      - name: Analyze
+        run: flutter analyze
+      - name: Unit tests
+        run: flutter test --coverage
+      - name: End-to-end tests
+        run: flutter test integration_test
+      - name: Build web release
+        run: flutter build web --release
+      - name: Archive web build
+        run: tar -czf build/web.tar.gz -C build web
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/web.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
