@@ -1,0 +1,15 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_single_quotes: true
+    avoid_redundant_argument_values: true
+    avoid_unused_constructor_parameters: true
+    unawaited_futures: true
+    cascade_invocations: true
+
+analyzer:
+  exclude:
+    - '**/*.g.dart'

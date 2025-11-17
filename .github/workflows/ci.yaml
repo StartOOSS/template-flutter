@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Format check
+        run: flutter format --set-exit-if-changed lib test
+      - name: Analyze
+        run: flutter analyze
+      - name: Tests
+        run: flutter test --coverage
+      - name: End-to-end
+        run: flutter test integration_test
+      - name: Security
+        run: |
+          dart pub outdated --mode=null-safety
+          flutter pub deps --style=compact
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          format: table
+          exit-code: '1'
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source=. --no-git --redact
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
