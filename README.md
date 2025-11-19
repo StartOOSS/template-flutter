@@ -52,6 +52,15 @@ Configure CORS in the backend to allow the app origin when running on web.
 - `make secrets` – gitleaks scan for committed secrets using a containerized runner.
 - `make check` – run the full suite locally.
 
+### End-to-end execution against live deployments
+The default integration test suite uses a mocked HTTP client for deterministic runs in CI. To run the same UI flow against a deployed `template-go` instance (for example, before auto-merging dependency bumps), pass dart-defines to enable the live API:
+
+```bash
+flutter test integration_test \
+  --dart-define=USE_LIVE_API=true \
+  --dart-define=API_BASE_URL=https://todo.example.com
+```
+
 ## Versioning and releases
 - Versions are managed by [Release Please](https://github.com/googleapis/release-please) using semantic commit messages. The workflow opens PRs that bump `pubspec.yaml`, update the manifest, and append to `CHANGELOG.md`.
 - Publishing a GitHub Release (or running the workflow manually) triggers the **Release Build** pipeline, which reruns formatting, analysis, unit tests, end-to-end tests, and produces a release-ready `build/web.tar.gz` asset attached to the release.
