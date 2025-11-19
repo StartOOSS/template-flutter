@@ -9,6 +9,8 @@
 .idea/
 .vscode/
 .DS_Store
+.flutter-plugins
+.flutter-plugins-dependencies
 .android/
 .ios/
 .macos/

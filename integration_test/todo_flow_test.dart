@@ -11,8 +11,7 @@ import 'package:template_flutter/core/config/app_config.dart';
 import 'package:template_flutter/core/telemetry/telemetry.dart';
 
 const _useLiveApi = bool.fromEnvironment('USE_LIVE_API');
-const _liveApiBaseUrl =
-    String.fromEnvironment('API_BASE_URL', defaultValue: '');
+const _liveApiBaseUrl = String.fromEnvironment('API_BASE_URL');
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -81,7 +80,7 @@ void main() {
 
     await Telemetry.init(config, client: client, enableExporters: _useLiveApi);
 
-    await tester.pumpWidget(const App(config: config));
+    await tester.pumpWidget(App(config: config));
 
     // Page load renders a spinner while the initial fetch runs.
     expect(find.byType(CircularProgressIndicator), findsOneWidget);

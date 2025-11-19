@@ -66,8 +66,9 @@ class Telemetry {
     try {
       return await run(span);
     } catch (error, stack) {
-      span.recordException(error, stackTrace: stack);
-      span.setStatus(otel_api.StatusCode.error, error.toString());
+      span
+        ..recordException(error, stackTrace: stack)
+        ..setStatus(otel_api.StatusCode.error, error.toString());
       rethrow;
     } finally {
       span.end();
@@ -110,14 +111,15 @@ class TelemetryHttpClient extends http.BaseClient {
       return response;
     } catch (error, stack) {
       stopwatch.stop();
-      span.recordException(error, stackTrace: stack);
-      span.setAttributes([
-        otel_api.Attribute.fromString('http.method', request.method),
-        otel_api.Attribute.fromString('http.host', request.url.host),
-        otel_api.Attribute.fromInt(
-            'http.duration_ms', stopwatch.elapsedMilliseconds),
-      ]);
-      span.setStatus(otel_api.StatusCode.error, error.toString());
+      span
+        ..recordException(error, stackTrace: stack)
+        ..setAttributes([
+          otel_api.Attribute.fromString('http.method', request.method),
+          otel_api.Attribute.fromString('http.host', request.url.host),
+          otel_api.Attribute.fromInt(
+              'http.duration_ms', stopwatch.elapsedMilliseconds),
+        ])
+        ..setStatus(otel_api.StatusCode.error, error.toString());
       rethrow;
     } finally {
       span.end();

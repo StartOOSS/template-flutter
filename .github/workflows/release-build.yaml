@@ -31,7 +31,7 @@ jobs:
       - name: Unit tests
         run: flutter test --coverage
       - name: End-to-end tests
-        run: flutter test integration_test
+        run: flutter test integration_test -d flutter-tester
       - name: Build web release
         run: flutter build web --release
       - name: Archive web build

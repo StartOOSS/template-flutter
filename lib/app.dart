@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'core/config/app_config.dart';
-import 'core/widgets/async_error.dart';
 import 'features/todos/presentation/todo_screen.dart';
 
 class App extends StatelessWidget {

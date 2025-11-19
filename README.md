@@ -49,8 +49,9 @@ Configure CORS in the backend to allow the app origin when running on web.
 - `make test` – run all unit/widget tests.
 - `make e2e` – run integration tests under `integration_test/`.
 - `make security` – dependency and SCA checks via `dart pub outdated` and `flutter pub deps --style=compact` for SBOM-friendly output.
-- `make secrets` – gitleaks scan for committed secrets using a containerized runner.
+- `make secrets` – gitleaks scan for committed secrets (uses Docker when available and falls back to a downloaded binary otherwise).
 - `make check` – run the full suite locally.
+- `make all` – install dependencies and run every check in the same order CI executes.
 
 ### End-to-end execution against live deployments
 The default integration test suite uses a mocked HTTP client for deterministic runs in CI. To run the same UI flow against a deployed `template-go` instance (for example, before auto-merging dependency bumps), pass dart-defines to enable the live API:
