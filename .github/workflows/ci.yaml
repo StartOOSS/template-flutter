@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.22.2
+          cache: true
+      - name: Install dependencies
+        run: |
+          for i in 1 2 3; do
+            flutter pub get && break
+            echo "flutter pub get failed on attempt $i, retrying in 10s..."
+            sleep 10
+          done
+      - name: Format check
+        run: dart format --set-exit-if-changed lib test integration_test
+      - name: Analyze
+        run: flutter analyze
+      - name: Tests
+        run: flutter test --coverage
+      - name: End-to-end
+        run: flutter test integration_test -d flutter-tester
+      - name: Security
+        run: |
+          dart pub outdated
+          flutter pub deps --style=compact
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          format: table
+          exit-code: '1'
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        continue-on-error: true
