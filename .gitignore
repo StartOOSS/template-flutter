@@ -18,5 +18,7 @@ web/
 coverage/
 flutter_*.png
 *.lock
+# keep example config committed; real env files remain ignored
 .env
 .env.*
+!.env.example

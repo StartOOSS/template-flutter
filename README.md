@@ -24,7 +24,7 @@ A Flutter template that pairs with the [`template-go`](https://github.com/spacet
 
 ## Getting started
 1. Install Flutter (stable channel) and Dart.
-2. Copy `.env.example` to `.env` and set the following:
+2. Copy `.env.example` to `.env` (the app will fall back to `.env.example` in CI if `.env` is absent) and set the following:
    - `API_BASE_URL`: Base URL of the `template-go` API (e.g., `http://localhost:8080`).
    - `OTEL_EXPORTER_OTLP_ENDPOINT`: OTLP collector endpoint (e.g., `http://localhost:4318`).
    - `OTEL_SERVICE_NAME`: Service name for traces/metrics (defaults to `template-flutter`).
