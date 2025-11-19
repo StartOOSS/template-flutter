@@ -15,6 +15,10 @@ void main() {
     late _MockClient client;
     late TodoRepository repository;
 
+    setUpAll(() {
+      registerFallbackValue(Uri.parse('http://localhost'));
+    });
+
     setUp(() {
       client = _MockClient();
       Telemetry.httpClient = client;
@@ -48,6 +52,32 @@ void main() {
       final todo = await repository.create('Created');
 
       expect(todo.title, 'Created');
+    });
+
+    test('toggles todo completion', () async {
+      when(() => client.put(
+                any(),
+                headers: any(named: 'headers'),
+                body: any(named: 'body'),
+              )).thenAnswer(
+        (_) async => http.Response(
+          jsonEncode({'id': '1', 'title': 'Test', 'completed': true}),
+          200,
+        ),
+      );
+
+      final todo = await repository.toggleComplete(const Todo(id: '1', title: 'Test', completed: false));
+
+      expect(todo.completed, isTrue);
+      verify(() => client.put(any(), headers: any(named: 'headers'), body: any(named: 'body'))).called(1);
+    });
+
+    test('deletes todo', () async {
+      when(() => client.delete(any())).thenAnswer((_) async => http.Response('', 204));
+
+      await repository.delete('1');
+
+      verify(() => client.delete(any())).called(1);
     });
   });
 }
