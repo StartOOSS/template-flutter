@@ -17,10 +17,7 @@ class App extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
-      builder: (context, child) {
-        ErrorWidget.builder = (details) => AsyncError(details: details);
-        return child ?? const SizedBox.shrink();
-      },
+      builder: (context, child) => child ?? const SizedBox.shrink(),
       home: TodoScreen(config: config),
     );
   }

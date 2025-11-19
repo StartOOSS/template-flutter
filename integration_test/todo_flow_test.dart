@@ -11,12 +11,14 @@ import 'package:template_flutter/core/config/app_config.dart';
 import 'package:template_flutter/core/telemetry/telemetry.dart';
 
 const _useLiveApi = bool.fromEnvironment('USE_LIVE_API');
-const _liveApiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+const _liveApiBaseUrl =
+    String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('todo e2e flow with telemetry-enabled HTTP client', (tester) async {
+  testWidgets('todo e2e flow with telemetry-enabled HTTP client',
+      (tester) async {
     final todos = <Map<String, dynamic>>[
       {'id': '1', 'title': 'Seed todo', 'completed': false},
     ];
@@ -41,7 +43,8 @@ void main() {
           return http.Response(jsonEncode(created), 201);
         }
 
-        if (request.url.path.startsWith('/api/v1/todos/') && request.method == 'PUT') {
+        if (request.url.path.startsWith('/api/v1/todos/') &&
+            request.method == 'PUT') {
           final id = request.url.pathSegments.last;
           final body = jsonDecode(request.body) as Map<String, dynamic>;
           final index = todos.indexWhere((t) => t['id'] == id);
@@ -57,7 +60,8 @@ void main() {
           return http.Response(jsonEncode(updated), 200);
         }
 
-        if (request.url.path.startsWith('/api/v1/todos/') && request.method == 'DELETE') {
+        if (request.url.path.startsWith('/api/v1/todos/') &&
+            request.method == 'DELETE') {
           final id = request.url.pathSegments.last;
           todos.removeWhere((t) => t['id'] == id);
           return http.Response('', 204);
@@ -68,7 +72,9 @@ void main() {
     }
 
     final config = AppConfig(
-      apiBaseUrl: _useLiveApi && _liveApiBaseUrl.isNotEmpty ? _liveApiBaseUrl : 'http://localhost:8080',
+      apiBaseUrl: _useLiveApi && _liveApiBaseUrl.isNotEmpty
+          ? _liveApiBaseUrl
+          : 'http://localhost:8080',
       otelEndpoint: 'http://localhost:4318',
       serviceName: 'template-flutter-e2e',
     );
@@ -85,7 +91,8 @@ void main() {
     expect(find.text('Seed todo'), findsOneWidget);
     expect(find.byKey(const Key('todo-input-field')), findsOneWidget);
 
-    await tester.enterText(find.byKey(const Key('todo-input-field')), 'Write e2e test');
+    await tester.enterText(
+        find.byKey(const Key('todo-input-field')), 'Write e2e test');
     await tester.tap(find.byKey(const Key('todo-submit-button')));
     await tester.pumpAndSettle();
 
@@ -97,8 +104,8 @@ void main() {
       of: find.text('Write e2e test'),
       matching: find.byType(ListTile),
     );
-    final textWidget =
-        tester.widget<Text>(find.descendant(of: completedTile, matching: find.byType(Text)).first);
+    final textWidget = tester.widget<Text>(
+        find.descendant(of: completedTile, matching: find.byType(Text)).first);
     expect(textWidget.style?.decoration, TextDecoration.lineThrough);
 
     await tester.tap(find.byKey(const Key('todo-2-delete')));

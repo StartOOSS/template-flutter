@@ -25,7 +25,7 @@ jobs:
             sleep 10
           done
       - name: Format check
-        run: flutter format --set-exit-if-changed lib test integration_test
+        run: dart format --set-exit-if-changed lib test integration_test
       - name: Analyze
         run: flutter analyze
       - name: Unit tests

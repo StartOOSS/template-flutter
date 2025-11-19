@@ -15,12 +15,14 @@ class TodoRepository {
         return todos;
       });
 
-  Future<Todo> create(String title) => Telemetry.span('todo.create', (_) => client.createTodo(title));
+  Future<Todo> create(String title) =>
+      Telemetry.span('todo.create', (_) => client.createTodo(title));
 
   Future<Todo> toggleComplete(Todo todo) => Telemetry.span('todo.toggle', (_) {
         final updated = todo.copyWith(completed: !todo.completed);
         return client.updateTodo(updated);
       });
 
-  Future<void> delete(String id) => Telemetry.span('todo.delete', (_) => client.deleteTodo(id));
+  Future<void> delete(String id) =>
+      Telemetry.span('todo.delete', (_) => client.deleteTodo(id));
 }

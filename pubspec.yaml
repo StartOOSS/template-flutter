@@ -12,10 +12,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   http: ^1.2.0
   collection: ^1.18.0
-  opentelemetry_api: ^0.20.0
-  opentelemetry_sdk: ^0.20.0
-  opentelemetry_exporter_otlp: ^0.20.0
-  opentelemetry: ^0.20.0
+  opentelemetry: ^0.18.10
   uuid: ^4.3.3
 
 dev_dependencies:

@@ -2,7 +2,7 @@
 
 ## Tooling
 - `analysis_options.yaml` enforces `flutter_lints` with strict rules.
-- CI runs `flutter format --set-exit-if-changed` and `flutter analyze`.
+- CI runs `dart format --set-exit-if-changed` and `flutter analyze`.
 
 ## Coverage and quality gates
 - Tests run with coverage and upload to Codecov for visibility; thresholds can be enforced in branch protection.

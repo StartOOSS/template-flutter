@@ -15,7 +15,8 @@ class AppConfig {
     final env = dotenv.env;
     return AppConfig(
       apiBaseUrl: env['API_BASE_URL'] ?? 'http://localhost:8080',
-      otelEndpoint: env['OTEL_EXPORTER_OTLP_ENDPOINT'] ?? 'http://localhost:4318',
+      otelEndpoint:
+          env['OTEL_EXPORTER_OTLP_ENDPOINT'] ?? 'http://localhost:4318',
       serviceName: env['OTEL_SERVICE_NAME'] ?? 'template-flutter',
     );
   }
