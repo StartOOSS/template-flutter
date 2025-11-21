@@ -28,3 +28,7 @@ flutter:
   uses-material-design: true
   assets:
     - .env.example
+    - .env.mock
+    - .env.dev
+    - .env.preprod
+    - .env.prod

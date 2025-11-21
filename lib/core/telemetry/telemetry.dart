@@ -1,15 +1,21 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:opentelemetry/api.dart' as otel_api;
 import 'package:opentelemetry/sdk.dart' as otel_sdk;
 
 import '../config/app_config.dart';
+import '../network/resilient_http_client.dart';
 
 class Telemetry {
   static otel_api.Tracer tracer =
       otel_api.globalTracerProvider.getTracer('template_flutter');
   static late http.Client httpClient;
+  static final TelemetryNavigatorObserver navigatorObserver =
+      TelemetryNavigatorObserver();
+  static FlutterExceptionHandler? _originalFlutterErrorHandler;
 
   static Future<void> init(
     AppConfig config, {
@@ -45,7 +51,9 @@ class Telemetry {
     otel_api.registerGlobalTracerProvider(tracerProvider);
     tracer = tracerProvider.getTracer('template_flutter');
 
-    httpClient = TelemetryHttpClient(client ?? http.Client());
+    final resilientClient = ResilientHttpClient(client ?? http.Client());
+    httpClient = TelemetryHttpClient(resilientClient);
+    _installFlutterErrorHandler();
   }
 
   /// Allows tests to supply a pre-configured HTTP client without
@@ -74,6 +82,35 @@ class Telemetry {
       span.end();
     }
   }
+}
+
+void _recordFlutterError(FlutterErrorDetails details) {
+  final span = Telemetry.tracer.startSpan(
+    'flutter.error',
+    attributes: [
+      otel_api.Attribute.fromString(
+          'error.exception_as_string', details.exceptionAsString()),
+      if (details.library != null)
+        otel_api.Attribute.fromString('error.library', details.library!),
+    ],
+  );
+  final stack = details.stack;
+  if (stack != null) {
+    span.recordException(details.exception, stackTrace: stack);
+  } else {
+    span.recordException(details.exception);
+  }
+  span
+    ..setStatus(otel_api.StatusCode.error, 'FlutterError')
+    ..end();
+}
+
+void _installFlutterErrorHandler() {
+  Telemetry._originalFlutterErrorHandler ??= FlutterError.onError;
+  FlutterError.onError = (details) {
+    _recordFlutterError(details);
+    Telemetry._originalFlutterErrorHandler?.call(details);
+  };
 }
 
 class TelemetryHttpClient extends http.BaseClient {
@@ -124,5 +161,56 @@ class TelemetryHttpClient extends http.BaseClient {
     } finally {
       span.end();
     }
+  }
+}
+
+class TelemetryNavigatorObserver extends NavigatorObserver {
+  final Map<Route<dynamic>, otel_api.Span> _routeSpans = {};
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _startSpan(route, action: 'push', previous: previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (oldRoute != null) {
+      _endSpan(oldRoute, action: 'replace');
+    }
+    if (newRoute != null) {
+      _startSpan(newRoute, action: 'replace');
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    _endSpan(route, action: 'pop');
+  }
+
+  void _startSpan(Route<dynamic> route,
+      {required String action, Route<dynamic>? previous}) {
+    final routeName = route.settings.name ?? route.runtimeType.toString();
+    final previousName =
+        previous?.settings.name ?? previous?.runtimeType.toString();
+    final span = Telemetry.tracer.startSpan(
+      'Navigation $routeName',
+      attributes: [
+        otel_api.Attribute.fromString('navigation.action', action),
+        if (previousName != null)
+          otel_api.Attribute.fromString('navigation.previous', previousName),
+      ],
+    );
+    _routeSpans[route] = span;
+  }
+
+  void _endSpan(Route<dynamic> route, {required String action}) {
+    final span = _routeSpans.remove(route);
+    span?.setAttribute(
+      otel_api.Attribute.fromString('navigation.complete_action', action),
+    );
+    span?.end();
   }
 }

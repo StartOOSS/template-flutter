@@ -25,6 +25,7 @@ void main() {
     apiBaseUrl: 'http://localhost:8080',
     otelEndpoint: 'http://localhost:4318',
     serviceName: 'template-flutter-widget-test',
+    environment: 'test',
   );
 
   testWidgets('shows loading then renders todos', (tester) async {

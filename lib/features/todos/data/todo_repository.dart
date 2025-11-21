@@ -16,13 +16,37 @@ class TodoRepository {
       });
 
   Future<Todo> create(String title) =>
-      Telemetry.span('todo.create', (_) => client.createTodo(title));
-
-  Future<Todo> toggleComplete(Todo todo) => Telemetry.span('todo.toggle', (_) {
-        final updated = todo.copyWith(completed: !todo.completed);
-        return client.updateTodo(updated);
+      Telemetry.span('todo.create', (span) async {
+        final todo = await client.createTodo(title);
+        span.addEvent(
+          'todo.created',
+          attributes: [
+            Attribute.fromString('todo.id', todo.id),
+            Attribute.fromString('todo.title', todo.title),
+          ],
+        );
+        return todo;
       });
 
-  Future<void> delete(String id) =>
-      Telemetry.span('todo.delete', (_) => client.deleteTodo(id));
+  Future<Todo> toggleComplete(Todo todo) =>
+      Telemetry.span('todo.toggle', (span) async {
+        final updated = todo.copyWith(completed: !todo.completed);
+        final response = await client.updateTodo(updated);
+        span.addEvent(
+          'todo.toggled',
+          attributes: [
+            Attribute.fromString('todo.id', response.id),
+            Attribute.fromBoolean('todo.completed', response.completed),
+          ],
+        );
+        return response;
+      });
+
+  Future<void> delete(String id) => Telemetry.span('todo.delete', (span) async {
+        await client.deleteTodo(id);
+        span.addEvent(
+          'todo.deleted',
+          attributes: [Attribute.fromString('todo.id', id)],
+        );
+      });
 }

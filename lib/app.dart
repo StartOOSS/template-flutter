@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/config/app_config.dart';
+import 'core/telemetry/telemetry.dart';
 import 'features/todos/presentation/todo_screen.dart';
 
 class App extends StatelessWidget {
@@ -17,6 +18,7 @@ class App extends StatelessWidget {
         useMaterial3: true,
       ),
       builder: (context, child) => child ?? const SizedBox.shrink(),
+      navigatorObservers: [Telemetry.navigatorObserver],
       home: TodoScreen(config: config),
     );
   }
