@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -37,7 +38,7 @@ void main() {
 
       expect(
         () => client.fetchTodos(),
-        throwsA(isA<Exception>()),
+        throwsA(isA<TodoApiException>()),
       );
     });
 
@@ -94,7 +95,26 @@ void main() {
       );
       expect(
         () => client.deleteTodo('1'),
-        throwsA(isA<Exception>()),
+        throwsA(isA<TodoApiException>()),
+      );
+    });
+
+    test('wraps timeout errors', () async {
+      Telemetry.overrideHttpClient(
+        MockClient((_) async => throw TimeoutException('delay')),
+      );
+
+      final client = TodoApiClient(baseUrl: 'http://example.com');
+
+      expect(
+        () => client.fetchTodos(),
+        throwsA(
+          isA<TodoApiException>().having(
+            (error) => error.message,
+            'message',
+            contains('timed out'),
+          ),
+        ),
       );
     });
   });

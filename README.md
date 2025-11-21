@@ -11,6 +11,21 @@ A Flutter template that pairs with the [`template-go`](https://github.com/spacet
 - **Security & quality gates** via GitHub Actions (lint, test, formatting, dependency checks, SCA scanning, secret scanning).
 - **Container-friendly** for CI runners and local dev with Makefile helpers.
 
+## Best practices
+- **Golden standard:** This repo is the canonical reference for building
+  production-ready Flutter frontends for the `template-go` backend—use it as
+  inspiration when structuring new apps or modernizing existing ones.
+- **Configuration & resiliency:** `AppConfig` validates critical env vars while
+  `ResilientHttpClient` adds retries/timeouts and `TodoApiClient` throws typed
+  errors for better UX.
+- **Layered architecture:** `lib/core` houses shared config/telemetry utilities, while feature modules isolate models, data sources, and presentation widgets.
+- **Telemetry-first development:** `Telemetry.init`, span helpers, and the custom HTTP client emit OpenTelemetry traces/metrics across API calls and navigation.
+- **Defense-in-depth automation:** Make targets mirror CI, which enforces formatting, analysis, unit + e2e tests, dependency health, Trivy, and gitleaks scans.
+- **Testing pyramid:** Repository, widget, and integration tests cover deterministic mocks with optional live API runs driven by dart-defines.
+- **Documentation & governance:** Production-readiness milestones live under `docs/microservice/`, with semantic releases managed by Release Please and Dependabot keeping dependencies fresh.
+
+See `docs/best-practices.md` for the full guide and the prioritized roadmap that keeps this template production ready.
+
 ## Project structure
 - `lib/`
   - `app.dart`: Root widget with navigation and theming.
@@ -85,4 +100,3 @@ This template documents how it satisfies the production-readiness milestones fro
 - Keep changes small and covered by tests.
 - Run the Make targets locally before opening a PR.
 - Follow the lint rules and avoid suppressing warnings unless justified.
-

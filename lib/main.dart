@@ -12,8 +12,15 @@ Future<void> main() async {
   final envFile = File('.env');
   final fileName = await envFile.exists() ? '.env' : '.env.example';
   await dotenv.load(fileName: fileName);
-  final config = AppConfig.fromEnv();
-  await Telemetry.init(config);
 
-  runApp(App(config: config));
+  try {
+    final config = AppConfig.fromEnv();
+    await Telemetry.init(config);
+    runApp(App(config: config));
+  } on ConfigValidationException catch (error) {
+    stderr.writeln(
+      'Configuration error: ${error.message}. Update your .env or see README.md.',
+    );
+    rethrow;
+  }
 }
