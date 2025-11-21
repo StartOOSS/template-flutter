@@ -1,81 +1,48 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:template_flutter/app.dart';
 import 'package:template_flutter/core/config/app_config.dart';
 import 'package:template_flutter/core/telemetry/telemetry.dart';
+import 'package:template_flutter/testing/mock_template_go_server.dart';
 
 const _useLiveApi = bool.fromEnvironment('USE_LIVE_API');
 const _liveApiBaseUrl = String.fromEnvironment('API_BASE_URL');
+const _apiEnv = String.fromEnvironment('APP_ENV', defaultValue: 'mock');
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  MockTemplateGoServer? mockServer;
+
+  setUpAll(() async {
+    if (!_useLiveApi) {
+      mockServer = await MockTemplateGoServer.start();
+    }
+  });
+
+  tearDownAll(() async {
+    await mockServer?.close();
+  });
+
   testWidgets('todo e2e flow with telemetry-enabled HTTP client',
       (tester) async {
-    final todos = <Map<String, dynamic>>[
-      {'id': '1', 'title': 'Seed todo', 'completed': false},
-    ];
+    final client = http.Client();
+    addTearDown(client.close);
 
-    http.Client client;
-    if (_useLiveApi && _liveApiBaseUrl.isNotEmpty) {
-      client = http.Client();
-    } else {
-      client = MockClient((request) async {
-        if (request.url.path == '/api/v1/todos' && request.method == 'GET') {
-          return http.Response(jsonEncode(todos), 200);
-        }
-
-        if (request.url.path == '/api/v1/todos' && request.method == 'POST') {
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          final created = {
-            'id': '${todos.length + 1}',
-            'title': body['title'],
-            'completed': false,
-          };
-          todos.insert(0, created);
-          return http.Response(jsonEncode(created), 201);
-        }
-
-        if (request.url.path.startsWith('/api/v1/todos/') &&
-            request.method == 'PUT') {
-          final id = request.url.pathSegments.last;
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          final index = todos.indexWhere((t) => t['id'] == id);
-          if (index == -1) {
-            return http.Response('Not found', 404);
-          }
-          final updated = {
-            'id': id,
-            'title': body['title'],
-            'completed': body['completed'],
-          };
-          todos[index] = updated;
-          return http.Response(jsonEncode(updated), 200);
-        }
-
-        if (request.url.path.startsWith('/api/v1/todos/') &&
-            request.method == 'DELETE') {
-          final id = request.url.pathSegments.last;
-          todos.removeWhere((t) => t['id'] == id);
-          return http.Response('', 204);
-        }
-
-        return http.Response('Unhandled ${request.method} ${request.url}', 500);
-      });
-    }
+    final baseUrl = (_useLiveApi && _liveApiBaseUrl.isNotEmpty)
+        ? _liveApiBaseUrl
+        : mockServer!.baseUrl;
+    final environment =
+        _useLiveApi ? (_apiEnv.isEmpty ? 'live' : _apiEnv) : 'mock';
 
     final config = AppConfig(
-      apiBaseUrl: _useLiveApi && _liveApiBaseUrl.isNotEmpty
-          ? _liveApiBaseUrl
-          : 'http://localhost:8080',
+      apiBaseUrl: baseUrl,
       otelEndpoint: 'http://localhost:4318',
       serviceName: 'template-flutter-e2e',
+      environment: environment,
     );
 
     await Telemetry.init(config, client: client, enableExporters: _useLiveApi);

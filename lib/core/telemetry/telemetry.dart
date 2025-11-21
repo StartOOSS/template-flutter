@@ -100,8 +100,9 @@ void _recordFlutterError(FlutterErrorDetails details) {
   } else {
     span.recordException(details.exception);
   }
-  span.setStatus(otel_api.StatusCode.error, 'FlutterError');
-  span.end();
+  span
+    ..setStatus(otel_api.StatusCode.error, 'FlutterError')
+    ..end();
 }
 
 void _installFlutterErrorHandler() {

@@ -9,12 +9,14 @@ void main() {
           'API_BASE_URL': 'https://example.com',
           'OTEL_EXPORTER_OTLP_ENDPOINT': 'https://otel.dev',
           'OTEL_SERVICE_NAME': 'test-service',
+          'APP_ENV': 'dev',
         },
       );
 
       expect(config.apiBaseUrl, 'https://example.com');
       expect(config.otelEndpoint, 'https://otel.dev');
       expect(config.serviceName, 'test-service');
+      expect(config.environment, 'dev');
     });
 
     test('throws when the API URL is invalid', () {

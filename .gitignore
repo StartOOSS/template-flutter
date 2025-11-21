@@ -23,4 +23,8 @@ flutter_*.png
 .env
 .env.*
 !.env.example
+!.env.mock
+!.env.dev
+!.env.preprod
+!.env.prod
 .metadata

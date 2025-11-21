@@ -14,27 +14,37 @@ class AppConfig {
     required this.apiBaseUrl,
     required this.otelEndpoint,
     required this.serviceName,
+    required this.environment,
   });
 
   final String apiBaseUrl;
   final String otelEndpoint;
   final String serviceName;
+  final String environment;
 
-  factory AppConfig.fromEnv({Map<String, String?>? overrides}) {
+  factory AppConfig.fromEnv({
+    Map<String, String?>? overrides,
+    String? environment,
+  }) {
     final env = overrides ?? dotenv.env;
-    return AppConfig.fromMap(env);
+    return AppConfig.fromMap(env, environment: environment);
   }
 
-  factory AppConfig.fromMap(Map<String, String?> env) {
+  factory AppConfig.fromMap(
+    Map<String, String?> env, {
+    String? environment,
+  }) {
     final apiBaseUrl = env['API_BASE_URL'] ?? 'http://localhost:8080';
     final otlpEndpoint =
         env['OTEL_EXPORTER_OTLP_ENDPOINT'] ?? 'http://localhost:4318';
     final serviceName = env['OTEL_SERVICE_NAME'] ?? 'template-flutter';
+    final envName = env['APP_ENV'] ?? environment ?? 'mock';
 
     return AppConfig(
       apiBaseUrl: _validatedUrl(apiBaseUrl, 'API_BASE_URL'),
       otelEndpoint: _validatedUrl(otlpEndpoint, 'OTEL_EXPORTER_OTLP_ENDPOINT'),
       serviceName: _requireNonEmpty(serviceName, 'OTEL_SERVICE_NAME'),
+      environment: _requireNonEmpty(envName, 'APP_ENV'),
     );
   }
 

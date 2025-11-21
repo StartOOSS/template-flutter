@@ -25,12 +25,13 @@ confidence.
   under `lib/core/` so cross-cutting concerns stay reusable.
 
 ### Configuration & environment management
-- `.env.example` and `AppConfig.fromEnv()` centralize runtime configuration with
-  defaults suitable for local development and CI.
-- `main.dart` prefers `.env` but safely falls back to `.env.example`, ensuring
-  deterministic builds when secrets are not injected.
-- Make targets (`make setup`, `make all`) eliminate manual configuration steps
-  and codify the required commands in one place.
+- `.env.mock`, `.env.dev`, `.env.preprod`, `.env.prod`, and `.env.example`
+  provide curated configs; `--dart-define=APP_ENV=<env>` selects which file to
+  load at runtime.
+- `main.dart` auto-detects the right env file (preferring `.env.<env>` then
+  `.env`/`.env.example`) so emulator workflows match CI.
+- Make targets (`make setup`, `make run-*`, `make mock-api`) eliminate manual
+  configuration steps and codify the required commands in one place.
 - `AppConfig` validates API/OTLP URLs and service names, throwing
   `ConfigValidationException` errors that surface early in `main.dart` so
   misconfiguration never reaches runtime.
@@ -49,8 +50,9 @@ confidence.
 ### Testing strategy
 - Unit and widget tests under `test/features/` cover repositories, API clients,
   and UI flows with HTTP mocks and telemetry overrides.
-- `integration_test/todo_flow_test.dart` drives the full todo flow against
-  either mocks or a live backend, validating instrumentation and UI behavior.
+- `integration_test/todo_flow_test.dart` boots the reusable mock template-go
+  server (or an optional live backend) so tests exercise the real HTTP client
+  and telemetry pipeline end-to-end.
 - CI uploads coverage via Codecov to monitor regressions and keeps bindings for
   e2e tests through `flutter test integration_test -d flutter-tester`.
 - New unit tests validate configuration parsing and API error wrapping to guard

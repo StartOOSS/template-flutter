@@ -39,15 +39,27 @@ See `docs/best-practices.md` for the full guide and the prioritized roadmap that
 
 ## Getting started
 1. Install Flutter (stable channel) and Dart.
-2. Copy `.env.example` to `.env` (the app will fall back to `.env.example` in CI if `.env` is absent) and set the following:
-   - `API_BASE_URL`: Base URL of the `template-go` API (e.g., `http://localhost:8080`).
-   - `OTEL_EXPORTER_OTLP_ENDPOINT`: OTLP collector endpoint (e.g., `http://localhost:4318`).
-   - `OTEL_SERVICE_NAME`: Service name for traces/metrics (defaults to `template-flutter`).
+2. Choose an environment file:
+   - `.env.mock` – default mock API target for local dev (pairs with `make mock-api`).
+   - `.env.dev`, `.env.preprod`, `.env.prod` – sample configs for remote stacks.
+   - Copy the file you need to `.env` when running locally, or point the runtime to a specific file using `--dart-define=APP_ENV=<env>`.
 3. Fetch dependencies and run the app:
    ```bash
    flutter pub get
-   flutter run -d chrome # or ios/android target
+   flutter run -d chrome --dart-define=APP_ENV=mock
    ```
+
+### Environment profiles & mock backend
+- `APP_ENV` selects which `.env.<env>` file (mock/dev/preprod/prod) is loaded at runtime.
+- `make mock-api` (or `dart run tool/mock_template_go.dart --port=5050`) starts a lightweight mock of [`template-go`](https://github.com/StartOOSS/template-go) so emulators and browsers can exercise the full HTTP stack without hitting a real backend.
+- Override run targets with `RUN_ARGS="--dart-define=APP_ENV=dev" make run-android` (or `preprod` / `prod`) to point the UI at downstream environments.
+
+### Local run helpers
+- `make run-web` – launches the Chrome/web build (`RUN_ARGS="--dart-define=APP_ENV=mock" make run-web`).
+- `make run-ios` – runs the iOS simulator; ensure `flutter devices` lists a booted simulator/device first.
+- `make run-android` – runs against the active Android emulator/device.
+
+Set optional `RUN_ARGS` to pass additional flags/Dart defines (API env, feature flags, etc.) to any run target.
 
 ## API integration
 The UI assumes the `template-go` Todo endpoints:
@@ -68,13 +80,14 @@ Configure CORS in the backend to allow the app origin when running on web.
 - `make check` – run the full suite locally.
 - `make all` – install dependencies and run every check in the same order CI executes.
 
-### End-to-end execution against live deployments
-The default integration test suite uses a mocked HTTP client for deterministic runs in CI. To run the same UI flow against a deployed `template-go` instance (for example, before auto-merging dependency bumps), pass dart-defines to enable the live API:
+### End-to-end execution against mock and live deployments
+Integration tests start the local mock template-go server by default so the real HTTP client, telemetry, and widget flows are exercised end-to-end. To validate against a deployed environment, pass dart-defines to point the suite at another base URL:
 
 ```bash
 flutter test integration_test \
   --dart-define=USE_LIVE_API=true \
-  --dart-define=API_BASE_URL=https://todo.example.com
+  --dart-define=API_BASE_URL=https://todo.example.com \
+  --dart-define=APP_ENV=preprod
 ```
 
 ## Versioning and releases
